@@ -55,10 +55,13 @@ class ApiClient {
           config.headers['x-restaurant-id'] = restaurantId;
         }
 
-        // Add subdomain header for mobile apps (backend tenant middleware reads this)
-        const subdomain = await storage.getSubdomain();
-        if (subdomain) {
-          config.headers['x-subdomain'] = subdomain;
+        // Add subdomain header for mobile apps (if not already set)
+        // The login request sets this header directly, so don't overwrite it
+        if (!config.headers['x-subdomain']) {
+          const subdomain = await storage.getSubdomain();
+          if (subdomain) {
+            config.headers['x-subdomain'] = subdomain;
+          }
         }
 
         if (this.config?.debug) {
@@ -67,7 +70,8 @@ class ApiClient {
             url: config.url,
             hasAuth: !!token,
             hasRestaurantId: !!restaurantId,
-            hasSubdomain: !!subdomain,
+            hasSubdomain: !!config.headers['x-subdomain'],  // Check the actual header
+            subdomain: config.headers['x-subdomain'] || 'none',  // Show the value
           });
         }
 

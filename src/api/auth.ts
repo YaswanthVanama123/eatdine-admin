@@ -8,6 +8,8 @@ export const authApi = {
   login: async (credentials: LoginFormData): Promise<{ token: string; admin: Admin }> => {
     const { subdomain, username, password } = credentials;
 
+    console.log('[Auth API] Login attempt with:', { subdomain, username });
+
     // Send subdomain in header (for mobile apps)
     // The backend's tenant middleware reads x-subdomain header in development mode
     const response = await apiClient.post<ApiResponse<{ token: string; admin: Admin }>>(
@@ -19,6 +21,8 @@ export const authApi = {
         },
       }
     );
+
+    console.log('[Auth API] Login successful');
     return response.data.data;
   },
 
