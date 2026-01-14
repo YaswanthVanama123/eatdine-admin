@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SettingsProvider, useSettings } from './src/context/SettingsContext';
 import { ToastProvider } from './src/context/ToastContext';
 import { OrdersProvider } from './src/context/OrdersContext';
@@ -18,6 +19,7 @@ import {
   firebaseService,
 } from './src/services';
 import { apiClient } from './src/api/client';
+import { storage } from './src/api/storage';
 import { API_BASE_URL } from './src/utils/constants';
 
 /**
@@ -27,8 +29,14 @@ import { API_BASE_URL } from './src/utils/constants';
 function AppContent() {
   const { settings, loading } = useSettings();
 
-  // Initialize API client once on app startup
+  // Initialize storage and API client once on app startup
   useEffect(() => {
+    // Initialize storage adapter with AsyncStorage
+    console.log('[App] Initializing storage adapter with AsyncStorage');
+    storage.setAdapter(AsyncStorage);
+    console.log('[App] Storage adapter initialized successfully');
+
+    // Initialize API client
     console.log('[App] Initializing API client with base URL:', API_BASE_URL);
     apiClient.initialize({
       baseURL: API_BASE_URL,
