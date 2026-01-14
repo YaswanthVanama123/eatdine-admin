@@ -1,9 +1,9 @@
 /**
- * Professional Login Screen
+ * Professional Admin Login Screen
  * Secure authentication for admin dashboard access
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -16,8 +16,6 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { SecureStorage } from '../utils/storage';
-import { STORAGE_KEYS } from '../utils/constants';
 import { Icon } from '../components/Icon';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -33,39 +31,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    restaurantId: '',
   });
   const [errors, setErrors] = useState({
     username: '',
     password: '',
-    restaurantId: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    const loadRestaurantId = async () => {
-      try {
-        const storedRestaurantId = await SecureStorage.getItem(STORAGE_KEYS.RESTAURANT_ID);
-        if (storedRestaurantId) {
-          setFormData((prev) => ({ ...prev, restaurantId: storedRestaurantId }));
-        }
-      } catch (error) {
-        console.error('Error loading restaurant ID:', error);
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    loadRestaurantId();
-  }, []);
 
   const validateForm = (): boolean => {
     const newErrors = {
       username: '',
       password: '',
-      restaurantId: '',
     };
     let isValid = true;
 
@@ -76,11 +53,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
-      isValid = false;
-    }
-
-    if (!formData.restaurantId.trim()) {
-      newErrors.restaurantId = 'Restaurant ID is required';
       isValid = false;
     }
 
@@ -96,27 +68,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_ID, formData.restaurantId);
       await login(formData.username, formData.password);
-      Alert.alert('Success', 'Login successful! Welcome back.');
+      Alert.alert('Success', 'Welcome back!');
       navigation.replace('Dashboard');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
       Alert.alert('Login Failed', errorMessage);
-      console.error('Login error:', error);
+      console.error('[Login] Error:', error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isInitializing) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Initializing</Text>
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -133,37 +95,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <Icon name="utensils" size="2xl" color={theme.colors.surface} solid />
           </View>
           <Text style={styles.title}>Admin Dashboard</Text>
-          <Text style={styles.subtitle}>Sign in to access your restaurant management</Text>
+          <Text style={styles.subtitle}>Sign in to manage all restaurant operations</Text>
         </View>
 
         {/* Login Card */}
         <Card variant="elevated" style={styles.card}>
-          {/* Restaurant ID Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Restaurant ID</Text>
-            <View style={[styles.inputWrapper, errors.restaurantId && styles.inputWrapperError]}>
-              <Icon name="shop" size="sm" color={theme.colors.textTertiary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your restaurant ID"
-                placeholderTextColor={theme.colors.textTertiary}
-                value={formData.restaurantId}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, restaurantId: text });
-                  if (errors.restaurantId) {
-                    setErrors({ ...errors, restaurantId: '' });
-                  }
-                }}
-                editable={!isLoading}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-            {errors.restaurantId ? (
-              <Text style={styles.errorText}>{errors.restaurantId}</Text>
-            ) : null}
-          </View>
-
           {/* Username Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Username</Text>
@@ -171,7 +107,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Icon name="user" size="sm" color={theme.colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your username"
+                placeholder="Enter your admin username"
                 placeholderTextColor={theme.colors.textTertiary}
                 value={formData.username}
                 onChangeText={(text) => {
@@ -243,7 +179,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <View style={styles.footerIconContainer}>
             <Icon name="lock" size="xs" color={theme.colors.textTertiary} solid />
           </View>
-          <Text style={styles.footerText}>Secure Login - Authorized Personnel Only</Text>
+          <Text style={styles.footerText}>Secure Admin Access - Super Admin Only</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -259,18 +195,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: theme.spacing.lg,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    gap: theme.spacing.md,
-  },
-  loadingText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   header: {
     alignItems: 'center',
