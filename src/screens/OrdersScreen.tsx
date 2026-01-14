@@ -7,18 +7,12 @@ import {
   RefreshControl,
   Alert,
   Platform,
-} from 'react-native';
-import {
   Text,
-  Card,
-  Chip,
-  FAB,
   ActivityIndicator,
-  Portal,
-  Snackbar,
-} from 'react-native-paper';
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Icon } from '../components/Icon';
 import { Order, OrderFilters as OrderFiltersType, OrderStatus, Table } from '../types';
 import { ordersApi } from '../api/orders.api';
 import { tablesApi } from '../api/tables.api';
@@ -27,6 +21,7 @@ import OrderFilters from '../components/orders/OrderFilters';
 import OrderDetailsModal from '../components/orders/OrderDetailsModal';
 import RNPrint from 'react-native-print';
 import Share from 'react-native-share';
+import { theme } from '../theme';
 
 const OrdersScreen: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -45,7 +40,6 @@ const OrdersScreen: React.FC = () => {
     total: 0,
     pages: 1,
   });
-  const [snackbar, setSnackbar] = useState({ visible: false, message: '' });
 
   const fetchOrders = async (showRefresh = false) => {
     try {
@@ -59,7 +53,7 @@ const OrdersScreen: React.FC = () => {
       setPagination(response.pagination);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
-      setSnackbar({ visible: true, message: 'Failed to load orders' });
+      Alert.alert('Error', 'Failed to load orders');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -118,8 +112,6 @@ const OrdersScreen: React.FC = () => {
         setSelectedOrder({ ...selectedOrder, status });
       }
 
-      setSnackbar({ visible: true, message: 'Order status updated successfully' });
-
       // Refresh if the order should be removed from the list
       if (status === 'served' || status === 'cancelled') {
         handleCloseModal();
@@ -127,7 +119,7 @@ const OrdersScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
-      setSnackbar({ visible: true, message: 'Failed to update order status' });
+      Alert.alert('Error', 'Failed to update order status');
     }
   };
 
@@ -138,7 +130,6 @@ const OrdersScreen: React.FC = () => {
       // Try to print directly first
       try {
         await RNPrint.print({ html });
-        setSnackbar({ visible: true, message: 'Receipt sent to printer' });
       } catch (printError) {
         // If direct print fails, offer to share the receipt
         console.log('Direct print failed, offering share option:', printError);
@@ -150,12 +141,11 @@ const OrdersScreen: React.FC = () => {
             url: `file://${filePath}`,
             type: 'application/pdf',
           });
-          setSnackbar({ visible: true, message: 'Receipt shared successfully' });
         }
       }
     } catch (error) {
       console.error('Failed to print receipt:', error);
-      setSnackbar({ visible: true, message: 'Failed to print receipt' });
+      Alert.alert('Error', 'Failed to print receipt');
     }
   };
 
@@ -272,7 +262,7 @@ const OrdersScreen: React.FC = () => {
         style={[styles.swipeAction, { backgroundColor: config.color }]}
         onPress={() => handleStatusChange(order._id, nextStatus)}
       >
-        <MaterialCommunityIcons name="check" size={24} color="white" />
+        <Icon name="check" size="md" color="white" solid />
         <Text style={styles.swipeActionText}>{config.label}</Text>
       </TouchableOpacity>
     );
@@ -283,7 +273,7 @@ const OrdersScreen: React.FC = () => {
 
     return (
       <TouchableOpacity
-        style={[styles.swipeAction, { backgroundColor: '#ef4444' }]}
+        style={[styles.swipeAction, { backgroundColor: '#EF4444' }]}
         onPress={() => {
           Alert.alert(
             'Cancel Order',
@@ -295,7 +285,7 @@ const OrdersScreen: React.FC = () => {
           );
         }}
       >
-        <MaterialCommunityIcons name="close" size={24} color="white" />
+        <Icon name="xmark" size="md" color="white" solid />
         <Text style={styles.swipeActionText}>Cancel</Text>
       </TouchableOpacity>
     );
@@ -304,54 +294,85 @@ const OrdersScreen: React.FC = () => {
   const renderOrderItem = ({ item }: { item: Order }) => {
     const statusConfig = ORDER_STATUS_CONFIG[item.status];
 
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case 'received': return '#3B82F6';
+        case 'preparing': return '#F59E0B';
+        case 'ready': return '#10B981';
+        case 'served': return '#8B5CF6';
+        case 'cancelled': return '#EF4444';
+        default: return theme.colors.textTertiary;
+      }
+    };
+
+    const getStatusIcon = (status: string) => {
+      switch (status) {
+        case 'received': return 'bell-concierge';
+        case 'preparing': return 'fire-burner';
+        case 'ready': return 'circle-check';
+        case 'served': return 'circle-check';
+        case 'cancelled': return 'ban';
+        default: return 'circle';
+      }
+    };
+
     return (
       <Swipeable
         renderRightActions={() => renderRightActions(item)}
         renderLeftActions={() => renderLeftActions(item)}
       >
         <TouchableOpacity onPress={() => handleOrderClick(item)}>
-          <Card style={styles.card}>
-            <Card.Content>
-              <View style={styles.cardHeader}>
-                <View>
-                  <Text variant="titleMedium" style={styles.orderNumber}>
-                    {item.orderNumber}
-                  </Text>
-                  <Text variant="bodyMedium" style={styles.tableNumber}>
-                    Table {item.tableNumber}
-                  </Text>
+          <View style={styles.orderCardContainer}>
+            {/* Status Indicator Bar */}
+            <View style={[styles.orderStatusBar, { backgroundColor: getStatusColor(item.status) }]} />
+
+            <View style={styles.orderCardContent}>
+              {/* Header */}
+              <View style={styles.orderHeader}>
+                <View style={styles.orderHeaderLeft}>
+                  <View style={[styles.orderIconCircle, { backgroundColor: getStatusColor(item.status) + '15' }]}>
+                    <Icon name={getStatusIcon(item.status)} size="xl" color={getStatusColor(item.status)} solid />
+                  </View>
+                  <View style={styles.orderHeaderText}>
+                    <Text style={styles.orderNumberText}>{item.orderNumber}</Text>
+                    <View style={styles.tableRow}>
+                      <Icon name="chair" size="xs" color={theme.colors.textSecondary} />
+                      <Text style={styles.tableText}>Table {item.tableNumber}</Text>
+                    </View>
+                  </View>
                 </View>
-                <Chip
-                  style={{ backgroundColor: statusConfig.color + '20' }}
-                  textStyle={{ color: statusConfig.color }}
-                >
-                  {statusConfig.label}
-                </Chip>
+                <View style={[styles.statusChip, { backgroundColor: getStatusColor(item.status) }]}>
+                  <Text style={styles.statusChipText}>{statusConfig.label}</Text>
+                </View>
               </View>
 
-              <View style={styles.cardBody}>
-                <View style={styles.infoRow}>
-                  <MaterialCommunityIcons name="food" size={16} color="#666" />
-                  <Text variant="bodyMedium" style={styles.infoText}>
+              {/* Body */}
+              <View style={styles.orderBody}>
+                <View style={styles.orderInfoRow}>
+                  <Icon name="utensils" size="sm" color={theme.colors.textSecondary} />
+                  <Text style={styles.orderBodyText}>
                     {item.items.length} {item.items.length === 1 ? 'item' : 'items'}
                   </Text>
                 </View>
-                <View style={styles.infoRow}>
-                  <MaterialCommunityIcons name="clock-outline" size={16} color="#666" />
-                  <Text variant="bodySmall" style={styles.infoText}>
-                    {getRelativeTime(item.createdAt)}
-                  </Text>
+                <View style={styles.orderInfoRow}>
+                  <Icon name="clock" size="sm" color={theme.colors.textSecondary} />
+                  <Text style={styles.orderBodyText}>{getRelativeTime(item.createdAt)}</Text>
                 </View>
               </View>
 
-              <View style={styles.cardFooter}>
-                <Text variant="titleMedium" style={styles.total}>
-                  {formatCurrency(item.total)}
-                </Text>
-                <MaterialCommunityIcons name="chevron-right" size={24} color="#666" />
+              {/* Footer */}
+              <View style={styles.orderFooter}>
+                <View style={styles.orderTotalContainer}>
+                  <Text style={styles.orderTotalLabel}>Total</Text>
+                  <Text style={styles.orderTotalValue}>{formatCurrency(item.total)}</Text>
+                </View>
+                <View style={styles.orderViewButton}>
+                  <Text style={styles.orderViewText}>View Details</Text>
+                  <Icon name="chevron-right" size="sm" color={theme.colors.primary} />
+                </View>
               </View>
-            </Card.Content>
-          </Card>
+            </View>
+          </View>
         </TouchableOpacity>
       </Swipeable>
     );
@@ -359,18 +380,14 @@ const OrdersScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialCommunityIcons name="receipt-text-outline" size={64} color="#ccc" />
-      <Text variant="titleMedium" style={styles.emptyText}>
-        No orders found
-      </Text>
-      <Text variant="bodyMedium" style={styles.emptySubtext}>
-        Orders will appear here when customers place them
-      </Text>
+      <Icon name="inbox" size="4xl" color={theme.colors.textTertiary} />
+      <Text style={styles.emptyText}>No orders found</Text>
+      <Text style={styles.emptySubtext}>Orders will appear here when customers place them</Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <OrderFilters
         onFiltersChange={handleFiltersChange}
         initialFilters={filters}
@@ -379,7 +396,8 @@ const OrdersScreen: React.FC = () => {
 
       {isLoading && !isRefreshing ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading orders...</Text>
         </View>
       ) : (
         <FlatList
@@ -389,7 +407,12 @@ const OrdersScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmptyState}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
           }
         />
       )}
@@ -401,100 +424,181 @@ const OrdersScreen: React.FC = () => {
         onStatusChange={handleStatusChange}
         onPrintReceipt={handlePrintReceipt}
       />
-
-      <Portal>
-        <Snackbar
-          visible={snackbar.visible}
-          onDismiss={() => setSnackbar({ ...snackbar, visible: false })}
-          duration={3000}
-        >
-          {snackbar.message}
-        </Snackbar>
-      </Portal>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  loadingText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   listContent: {
-    padding: 16,
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing['3xl'],
   },
-  card: {
-    marginBottom: 12,
-    elevation: 2,
+  orderCardContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    marginBottom: theme.spacing.md,
+    overflow: 'hidden',
+    ...theme.shadows.md,
   },
-  cardHeader: {
+  orderStatusBar: {
+    height: 4,
+    width: '100%',
+  },
+  orderCardContent: {
+    padding: theme.spacing.lg,
+  },
+  orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: theme.spacing.md,
   },
-  orderNumber: {
-    fontWeight: 'bold',
-    color: '#6200ee',
-  },
-  tableNumber: {
-    color: '#666',
-    marginTop: 4,
-  },
-  cardBody: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 12,
-  },
-  infoRow: {
+  orderHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    flex: 1,
   },
-  infoText: {
-    color: '#666',
+  orderIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: theme.borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
   },
-  cardFooter: {
+  orderHeaderText: {
+    flex: 1,
+  },
+  orderNumberText: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tableText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  statusChip: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 8,
+    borderRadius: theme.borderRadius.full,
+  },
+  statusChipText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textInverse,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  orderBody: {
+    flexDirection: 'row',
+    gap: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border + '50',
+  },
+  orderInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  orderBodyText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  orderFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
   },
-  total: {
-    fontWeight: 'bold',
+  orderTotalContainer: {
+    flex: 1,
+  },
+  orderTotalLabel: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  orderTotalValue: {
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.primary,
+  },
+  orderViewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primaryBg,
+    paddingHorizontal: theme.spacing.base,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
+    gap: 4,
+  },
+  orderViewText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.primary,
   },
   swipeAction: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
-    marginBottom: 12,
+    width: 90,
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
   },
   swipeActionText: {
     color: 'white',
-    fontSize: 12,
-    marginTop: 4,
-    fontWeight: '600',
+    fontSize: theme.typography.fontSize.xs,
+    marginTop: 6,
+    fontWeight: theme.typography.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: theme.spacing['5xl'],
+    paddingHorizontal: theme.spacing.xl,
   },
   emptyText: {
-    marginTop: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text,
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.sm,
   },
   emptySubtext: {
-    marginTop: 8,
-    color: '#999',
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 22,
   },
 });
 

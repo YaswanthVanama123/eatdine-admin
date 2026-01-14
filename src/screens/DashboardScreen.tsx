@@ -300,43 +300,93 @@ function StatusCard({ label, count, color, icon }: any) {
   );
 }
 
-// OrderCard Component
+// OrderCard Component - Completely Redesigned
 function OrderCard({ order }: { order: Order }) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'received': return theme.colors.received;
-      case 'preparing': return theme.colors.preparing;
-      case 'ready': return theme.colors.ready;
+      case 'received': return '#3B82F6';
+      case 'preparing': return '#F59E0B';
+      case 'ready': return '#10B981';
       default: return theme.colors.textTertiary;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'received': return 'inbox';
-      case 'preparing': return 'fire';
-      case 'ready': return 'check-circle';
+      case 'received': return 'bell-concierge';
+      case 'preparing': return 'fire-burner';
+      case 'ready': return 'circle-check';
       default: return 'circle';
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'received': return 'New Order';
+      case 'preparing': return 'Cooking';
+      case 'ready': return 'Ready';
+      default: return status;
+    }
+  };
+
+  const getTimeDiff = (createdAt: string) => {
+    const now = new Date();
+    const orderTime = new Date(createdAt);
+    const diffMinutes = Math.floor((now.getTime() - orderTime.getTime()) / 60000);
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    return `${diffHours}h ago`;
+  };
+
   return (
     <TouchableOpacity style={styles.orderCard} activeOpacity={0.7}>
-      <View style={styles.orderCardHeader}>
-        <View style={styles.orderInfo}>
-          <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
-          <Text style={styles.orderTable}>Table {order.tableNumber}</Text>
+      {/* Status Indicator Bar */}
+      <View style={[styles.orderStatusBar, { backgroundColor: getStatusColor(order.status) }]} />
+
+      <View style={styles.orderCardContent}>
+        {/* Header Row */}
+        <View style={styles.orderCardHeader}>
+          <View style={styles.orderLeftHeader}>
+            <View style={[styles.orderIconCircle, { backgroundColor: getStatusColor(order.status) + '15' }]}>
+              <Icon name={getStatusIcon(order.status)} size="lg" color={getStatusColor(order.status)} solid />
+            </View>
+            <View style={styles.orderHeaderText}>
+              <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
+              <View style={styles.orderTableRow}>
+                <Icon name="chair" size="xs" color={theme.colors.textSecondary} />
+                <Text style={styles.orderTable}>Table {order.tableNumber}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.orderStatusBadge, { backgroundColor: getStatusColor(order.status) }]}>
+            <Text style={styles.orderStatusText}>{getStatusLabel(order.status)}</Text>
+          </View>
         </View>
-        <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) + '20' }]}>
-          <Icon name={getStatusIcon(order.status)} size="xs" color={getStatusColor(order.status)} solid />
-          <Text style={[styles.orderStatusText, { color: getStatusColor(order.status) }]}>
-            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-          </Text>
+
+        {/* Order Info Row */}
+        <View style={styles.orderInfoRow}>
+          <View style={styles.orderInfoItem}>
+            <Icon name="utensils" size="sm" color={theme.colors.textSecondary} />
+            <Text style={styles.orderInfoText}>{order.items.length} items</Text>
+          </View>
+          <View style={styles.orderInfoItem}>
+            <Icon name="clock" size="sm" color={theme.colors.textSecondary} />
+            <Text style={styles.orderInfoText}>{getTimeDiff(order.createdAt)}</Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.orderCardFooter}>
-        <Text style={styles.orderItems}>{order.items.length} items</Text>
-        <Text style={styles.orderAmount}>{formatCurrency(order.total)}</Text>
+
+        {/* Footer Row */}
+        <View style={styles.orderCardFooter}>
+          <View style={styles.orderAmountContainer}>
+            <Text style={styles.orderAmountLabel}>Total Amount</Text>
+            <Text style={styles.orderAmount}>{formatCurrency(order.total)}</Text>
+          </View>
+          <View style={styles.orderActionButton}>
+            <Text style={styles.orderActionText}>View</Text>
+            <Icon name="chevron-right" size="sm" color={theme.colors.primary} />
+          </View>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -581,54 +631,119 @@ const styles = StyleSheet.create({
   orderCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+    ...theme.shadows.md,
+    marginBottom: theme.spacing.sm,
+  },
+  orderStatusBar: {
+    height: 4,
+    width: '100%',
+  },
+  orderCardContent: {
     padding: theme.spacing.lg,
-    ...theme.shadows.sm,
   },
   orderCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: theme.spacing.md,
   },
-  orderInfo: {
+  orderLeftHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  orderIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  orderHeaderText: {
+    flex: 1,
   },
   orderNumber: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.extrabold,
     color: theme.colors.text,
+    marginBottom: 4,
+  },
+  orderTableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   orderTable: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  orderStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: theme.spacing.sm,
+  orderStatusBadge: {
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: 6,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.full,
   },
   orderStatusText: {
     fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textInverse,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  orderInfoRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border + '50',
+  },
+  orderInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  orderInfoText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   orderCardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  orderItems: {
-    fontSize: theme.typography.fontSize.sm,
+  orderAmountContainer: {
+    flex: 1,
+  },
+  orderAmountLabel: {
+    fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   orderAmount: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.primary,
+  },
+  orderActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primaryBg,
+    paddingHorizontal: theme.spacing.base,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
+    gap: 4,
+  },
+  orderActionText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.primary,
   },
   emptyState: {
