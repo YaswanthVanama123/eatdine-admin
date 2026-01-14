@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "710370647048",
+    "project_id": "eatfood-7e70e",
+    "storage_bucket": "eatfood-7e70e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:710370647048:android:89cc6a9e2deaf87994c5bd",
+        "android_client_info": {
+          "package_name": "com.eatdine.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDbfJBCbjpKLh5U-o6KXoWPV12d8hwChA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

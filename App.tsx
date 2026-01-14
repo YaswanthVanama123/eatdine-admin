@@ -1,118 +1,93 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
+ * Main App Entry Point - React Native CLI
+ * Complete app with Firebase notifications and auto-print functionality
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect } from 'react';
+import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PaperProvider } from 'react-native-paper';
+import { SettingsProvider, useSettings } from './src/context/SettingsContext';
+import { ToastProvider } from './src/context/ToastContext';
+import { OrdersProvider } from './src/context/OrdersContext';
+import { AuthProvider } from './src/context/AuthContext';
+import RootNavigator from './src/navigation/RootNavigator';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+  notificationHandlerService,
+  soundVibrationService,
+  firebaseService,
+} from './src/services';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+/**
+ * AppContent component that has access to SettingsContext
+ * This allows us to initialize notification handler with settings
+ */
+function AppContent() {
+  const { settings, loading } = useSettings();
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  useEffect(() => {
+    if (loading) return;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    // Initialize notification handler with settings
+    const initializeNotifications = async () => {
+      try {
+        console.log('🚀 Initializing notification system...');
+
+        // Initialize sound and vibration first
+        await soundVibrationService.initialize();
+
+        // Initialize notification handler with settings
+        await notificationHandlerService.initialize({
+          autoPrintEnabled: settings.autoPrintEnabled,
+          soundEnabled: settings.soundEnabled,
+          vibrationEnabled: true, // Can be added to settings
+        });
+
+        console.log('✅ Notification system initialized');
+      } catch (error) {
+        console.error('❌ Notification initialization failed:', error);
+      }
+    };
+
+    initializeNotifications();
+
+    // Cleanup on unmount
+    return () => {
+      soundVibrationService.cleanup();
+    };
+  }, [settings, loading]);
+
+  // Update notification handler when settings change
+  useEffect(() => {
+    if (!loading) {
+      notificationHandlerService.updateSettings({
+        autoPrintEnabled: settings.autoPrintEnabled,
+        soundEnabled: settings.soundEnabled,
+        vibrationEnabled: true,
+      });
+    }
+  }, [settings.autoPrintEnabled, settings.soundEnabled, loading]);
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <OrdersProvider>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <RootNavigator />
+    </OrdersProvider>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
+export default function App() {
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PaperProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
