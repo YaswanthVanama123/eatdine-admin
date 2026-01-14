@@ -170,9 +170,12 @@ applyNativeModulesAppBuildGradle(project)
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
 // Fix Gradle task dependency for vector icons
-tasks.whenTaskAdded { task ->
-    if (task.name.contains('lint')) {
-        task.dependsOn(tasks.findByName('copyReactNativeVectorIconFonts'))
+afterEvaluate {
+    tasks.matching { it.name.contains('lintAnalyze') }.configureEach {
+        def copyTask = tasks.findByName('copyReactNativeVectorIconFonts')
+        if (copyTask != null) {
+            it.dependsOn(copyTask)
+        }
     }
 }
 
