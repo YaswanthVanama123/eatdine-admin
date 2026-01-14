@@ -17,6 +17,8 @@ import {
   soundVibrationService,
   firebaseService,
 } from './src/services';
+import { apiClient } from './src/api/client';
+import { API_BASE_URL } from './src/utils/constants';
 
 /**
  * AppContent component that has access to SettingsContext
@@ -24,6 +26,23 @@ import {
  */
 function AppContent() {
   const { settings, loading } = useSettings();
+
+  // Initialize API client once on app startup
+  useEffect(() => {
+    console.log('[App] Initializing API client with base URL:', API_BASE_URL);
+    apiClient.initialize({
+      baseURL: API_BASE_URL,
+      timeout: 30000,
+      debug: true, // Enable debug logging
+      onUnauthorized: () => {
+        console.log('[App] User unauthorized - session expired');
+      },
+      onNetworkError: (error) => {
+        console.warn('[App] Network error:', error.message);
+      },
+    });
+    console.log('[App] API client initialized successfully');
+  }, []);
 
   useEffect(() => {
     if (loading) return;
