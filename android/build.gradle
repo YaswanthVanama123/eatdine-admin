@@ -27,6 +27,23 @@ allprojects {
             force 'androidx.core:core-ktx:1.13.1'
         }
     }
+
+    // Disable lint for all modules to prevent third-party library lint errors
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:none"
+    }
+
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                lintOptions {
+                    abortOnError false
+                    checkReleaseBuilds false
+                    ignoreWarnings true
+                }
+            }
+        }
+    }
 }
 
 apply plugin: "com.facebook.react.rootproject"
