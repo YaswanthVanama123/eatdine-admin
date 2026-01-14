@@ -21,8 +21,10 @@ import { dashboardApi } from '../api/dashboard';
 import { DashboardStats, Order } from '../types';
 import { formatCurrency } from '../utils/format';
 import { theme } from '../theme';
+import { useAuth } from '../context/AuthContext';
 
 export default function DashboardScreen() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,8 +84,82 @@ export default function DashboardScreen() {
     );
   }
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Afternoon';
+    return 'Good Evening';
+  };
+
+  const getCurrentDate = () => {
+    const date = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    return date.toLocaleDateString('en-US', options);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Premium Header Section */}
+      <View style={styles.headerContainer}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerLeft}>
+            <View style={styles.logoCircle}>
+              <Icon name="chart-line" size="lg" color={theme.colors.primary} solid />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.greeting}>{getGreeting()}! 👋</Text>
+              <Text style={styles.headerTitle}>{user?.name || 'Admin'}</Text>
+            </View>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.notificationButton}>
+              <Icon name="bell" size="lg" color={theme.colors.primary} solid />
+              {activeOrders.length > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>{activeOrders.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.headerBottom}>
+          <Icon name="calendar-days" size="sm" color={theme.colors.textSecondary} />
+          <Text style={styles.dateText}>{getCurrentDate()}</Text>
+        </View>
+
+        {/* Quick Stats Banner */}
+        <View style={styles.quickStatsBanner}>
+          <View style={styles.quickStat}>
+            <Icon name="fire" size="md" color="#EF4444" solid />
+            <View style={styles.quickStatText}>
+              <Text style={styles.quickStatValue}>{stats?.activeOrders || 0}</Text>
+              <Text style={styles.quickStatLabel}>Active</Text>
+            </View>
+          </View>
+          <View style={styles.quickStatDivider} />
+          <View style={styles.quickStat}>
+            <Icon name="clock" size="md" color="#F59E0B" solid />
+            <View style={styles.quickStatText}>
+              <Text style={styles.quickStatValue}>{stats?.ordersByStatus?.preparing || 0}</Text>
+              <Text style={styles.quickStatLabel}>Cooking</Text>
+            </View>
+          </View>
+          <View style={styles.quickStatDivider} />
+          <View style={styles.quickStat}>
+            <Icon name="check-circle" size="md" color="#10B981" solid />
+            <View style={styles.quickStatText}>
+              <Text style={styles.quickStatValue}>{stats?.ordersByStatus?.ready || 0}</Text>
+              <Text style={styles.quickStatLabel}>Ready</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -98,22 +174,15 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={{ opacity: fadeAnim }}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.greeting}>Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}</Text>
-              <Text style={styles.headerTitle}>Dashboard Overview</Text>
+          {/* Performance Stats Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Today's Performance</Text>
+              <Icon name="chart-line" size="md" color={theme.colors.primary} solid />
             </View>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Icon name="bell" size="lg" color={theme.colors.text} />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>{activeOrders.length}</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
 
-          {/* Stats Grid */}
-          <View style={styles.statsGrid}>
+            {/* Stats Grid */}
+            <View style={styles.statsGrid}>
             <StatCard
               title="Today's Revenue"
               value={formatCurrency(stats?.todayRevenue || 0)}
@@ -142,6 +211,7 @@ export default function DashboardScreen() {
               iconColor={theme.colors.info}
               bgColor={theme.colors.infoLight}
             />
+          </View>
           </View>
 
           {/* Order Status Summary */}
@@ -277,6 +347,126 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  headerContainer: {
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+    ...theme.shadows.lg,
+    borderBottomLeftRadius: theme.borderRadius['2xl'],
+    borderBottomRightRadius: theme.borderRadius['2xl'],
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  logoCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primaryBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: 2,
+  },
+  headerTitle: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.text,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  notificationButton: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.colors.primaryBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.full,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    borderWidth: 2,
+    borderColor: theme.colors.surface,
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textInverse,
+  },
+  headerBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.lg,
+  },
+  dateText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  quickStatsBanner: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    ...theme.shadows.md,
+  },
+  quickStat: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+  },
+  quickStatDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: theme.colors.border,
+    marginHorizontal: theme.spacing.xs,
+  },
+  quickStatText: {
+    alignItems: 'flex-start',
+  },
+  quickStatValue: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.text,
+    lineHeight: 24,
+  },
+  quickStatLabel: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -293,56 +483,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
     paddingBottom: theme.spacing['3xl'],
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  greeting: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
-    marginBottom: theme.spacing.xs,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.text,
-  },
-  notificationButton: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...theme.shadows.md,
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: theme.colors.error,
-    borderRadius: theme.borderRadius.full,
-    minWidth: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  notificationBadgeText: {
-    fontSize: 10,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.textInverse,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
   },
   statCard: {
     flex: 1,
@@ -373,6 +520,12 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: theme.spacing.xl,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
   },
   sectionHeader: {
     flexDirection: 'row',

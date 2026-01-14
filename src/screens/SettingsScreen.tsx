@@ -25,6 +25,9 @@ export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
   const [sound, setSound] = useState(true);
   const [vibration, setVibration] = useState(true);
+  const [autoPrint, setAutoPrint] = useState(true);
+  const [printReceipts, setPrintReceipts] = useState(true);
+  const [printKitchenTickets, setPrintKitchenTickets] = useState(true);
 
   const handleLogout = () => {
     Alert.alert(
@@ -130,9 +133,151 @@ export default function SettingsScreen() {
           />
         </View>
 
+        {/* Printer Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Printer Settings</Text>
+
+          <SettingButton
+            icon="print"
+            iconColor="#7C3AED"
+            iconBg="#EDE9FE"
+            title="Connected Printer"
+            subtitle="No printer connected"
+            onPress={() => Alert.alert('Printer', 'Configure printer connection')}
+          />
+
+          <SettingItem
+            icon="bolt"
+            iconColor="#DC2626"
+            iconBg="#FEE2E2"
+            title="Auto-Print Orders"
+            subtitle="Print new orders automatically"
+            rightElement={
+              <Switch
+                value={autoPrint}
+                onValueChange={setAutoPrint}
+                trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
+                thumbColor={autoPrint ? theme.colors.primary : theme.colors.surface}
+              />
+            }
+          />
+
+          <SettingItem
+            icon="receipt"
+            iconColor="#059669"
+            iconBg="#D1FAE5"
+            title="Print Receipts"
+            subtitle="Print customer receipts"
+            rightElement={
+              <Switch
+                value={printReceipts}
+                onValueChange={setPrintReceipts}
+                trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
+                thumbColor={printReceipts ? theme.colors.primary : theme.colors.surface}
+              />
+            }
+          />
+
+          <SettingItem
+            icon="kitchen-set"
+            iconColor="#EA580C"
+            iconBg="#FFEDD5"
+            title="Print Kitchen Tickets"
+            subtitle="Send orders to kitchen printer"
+            rightElement={
+              <Switch
+                value={printKitchenTickets}
+                onValueChange={setPrintKitchenTickets}
+                trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
+                thumbColor={printKitchenTickets ? theme.colors.primary : theme.colors.surface}
+              />
+            }
+          />
+
+          <SettingButton
+            icon="file-invoice"
+            iconColor="#0891B2"
+            iconBg="#CFFAFE"
+            title="Paper Size"
+            subtitle="80mm (Thermal)"
+            onPress={() => Alert.alert('Paper Size', 'Configure paper size settings')}
+          />
+
+          <SettingButton
+            icon="file-circle-check"
+            iconColor="#8B5CF6"
+            iconBg="#F3E8FF"
+            title="Test Print"
+            subtitle="Print a test receipt"
+            onPress={() => Alert.alert('Test Print', 'Printing test receipt...')}
+          />
+        </View>
+
+        {/* Restaurant Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Restaurant Information</Text>
+
+          <InfoCard
+            icon="store"
+            iconColor="#6366F1"
+            iconBg="#E0E7FF"
+            title="Restaurant Name"
+            value="Spice Garden Restaurant"
+          />
+
+          <InfoCard
+            icon="phone"
+            iconColor="#10B981"
+            iconBg="#D1FAE5"
+            title="Phone Number"
+            value="+91 98765 43210"
+          />
+
+          <InfoCard
+            icon="envelope"
+            iconColor="#3B82F6"
+            iconBg="#DBEAFE"
+            title="Email Address"
+            value="contact@spicegarden.com"
+          />
+
+          <InfoCard
+            icon="location-dot"
+            iconColor="#F59E0B"
+            iconBg="#FEF3C7"
+            title="Address"
+            value="123 Main Street, Mumbai, Maharashtra 400001"
+          />
+
+          <InfoCard
+            icon="building-columns"
+            iconColor="#8B5CF6"
+            iconBg="#F3E8FF"
+            title="GST Number"
+            value="27AABCU9603R1ZM"
+          />
+
+          <InfoCard
+            icon="clock"
+            iconColor="#14B8A6"
+            iconBg="#CCFBF1"
+            title="Business Hours"
+            value="Mon-Sun: 11:00 AM - 11:00 PM"
+          />
+
+          <SettingButton
+            icon="pen-to-square"
+            iconColor="#EC4899"
+            iconBg="#FCE7F3"
+            title="Edit Information"
+            subtitle="Update restaurant details"
+            onPress={() => Alert.alert('Edit Info', 'Restaurant information edit screen')}
+          />
+        </View>
+
         {/* Restaurant Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Restaurant</Text>
+          <Text style={styles.sectionTitle}>Restaurant Management</Text>
 
           <SettingButton
             icon="store"
@@ -240,6 +385,21 @@ function SettingButton({ icon, iconColor, iconBg, title, subtitle, onPress }: an
       </View>
       <Icon name="chevron-right" size="sm" color={theme.colors.textTertiary} />
     </TouchableOpacity>
+  );
+}
+
+// InfoCard Component (display information)
+function InfoCard({ icon, iconColor, iconBg, title, value }: any) {
+  return (
+    <View style={styles.infoCard}>
+      <View style={[styles.infoIcon, { backgroundColor: iconBg }]}>
+        <Icon name={icon} size="md" color={iconColor} solid />
+      </View>
+      <View style={styles.infoContent}>
+        <Text style={styles.infoTitle}>{title}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -370,5 +530,39 @@ const styles = StyleSheet.create({
     color: theme.colors.textTertiary,
     textAlign: 'center',
     marginTop: theme.spacing.xl,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.sm,
+  },
+  infoIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoTitle: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoValue: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.semibold,
+    lineHeight: 22,
   },
 });
