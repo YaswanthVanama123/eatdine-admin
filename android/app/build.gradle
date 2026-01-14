@@ -151,6 +151,16 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Force compatible androidx versions for Android SDK 34
+    constraints {
+        implementation("androidx.core:core:1.13.1") {
+            because 'Version 1.16.0 requires compileSdk 35, we are using compileSdk 34'
+        }
+        implementation("androidx.core:core-ktx:1.13.1") {
+            because 'Version 1.16.0 requires compileSdk 35, we are using compileSdk 34'
+        }
+    }
 }
 
 def cliNativeModulesGradle = file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
