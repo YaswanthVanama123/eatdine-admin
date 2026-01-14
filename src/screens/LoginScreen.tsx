@@ -94,8 +94,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <View style={styles.iconContainer}>
             <Icon name="utensils" size="2xl" color={theme.colors.surface} solid />
           </View>
-          <Text style={styles.title}>Admin Dashboard</Text>
-          <Text style={styles.subtitle}>Sign in to manage all restaurant operations</Text>
+          <Text style={styles.title}>Restaurant Admin</Text>
+          <Text style={styles.subtitle}>Sign in to manage your restaurant operations</Text>
         </View>
 
         {/* Login Card */}
@@ -179,7 +179,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <View style={styles.footerIconContainer}>
             <Icon name="lock" size="xs" color={theme.colors.textTertiary} solid />
           </View>
-          <Text style={styles.footerText}>Secure Admin Access - Super Admin Only</Text>
+          <Text style={styles.footerText}>Secure Admin Access - Restaurant Management</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
