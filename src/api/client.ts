@@ -70,9 +70,17 @@ class ApiClient {
             url: config.url,
             hasAuth: !!token,
             hasRestaurantId: !!restaurantId,
-            hasSubdomain: !!config.headers['x-subdomain'],  // Check the actual header
-            subdomain: config.headers['x-subdomain'] || 'none',  // Show the value
+            hasSubdomain: !!config.headers['x-subdomain'],
+            subdomain: config.headers['x-subdomain'] || 'none',
           });
+          console.log('[API Client] Full Request URL:', `${config.baseURL}${config.url}`);
+          console.log('[API Client] All Headers:', {
+            'x-subdomain': config.headers['x-subdomain'],
+            'x-restaurant-id': config.headers['x-restaurant-id'],
+            'Authorization': config.headers['Authorization'] ? 'Bearer ***' : 'none',
+            'Content-Type': config.headers['Content-Type'],
+          });
+          console.log('[API Client] Request Body:', config.data);
         }
 
         return config;
@@ -100,6 +108,22 @@ class ApiClient {
         return response;
       },
       async (error: AxiosError) => {
+        // Detailed error logging
+        if (this.config?.debug) {
+          console.error('[API Client] Error Response:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            message: (error.response?.data as any)?.message || error.message,
+            code: (error.response?.data as any)?.code,
+            url: error.config?.url,
+            method: error.config?.method?.toUpperCase(),
+            requestHeaders: {
+              'x-subdomain': error.config?.headers?.['x-subdomain'],
+              'x-restaurant-id': error.config?.headers?.['x-restaurant-id'],
+            },
+          });
+        }
+
         // Handle 401 Unauthorized and 403 Forbidden
         if (error.response?.status === 401 || error.response?.status === 403) {
           const errorMessage = (error.response?.data as any)?.message || '';
@@ -136,15 +160,6 @@ class ApiClient {
           if (this.config?.onNetworkError) {
             this.config.onNetworkError(error);
           }
-        }
-
-        // Log error for debugging
-        if (this.config?.debug) {
-          console.error('[API Client] Error:', {
-            status: error.response?.status,
-            message: (error.response?.data as any)?.message || error.message,
-            url: error.config?.url,
-          });
         }
 
         return Promise.reject(error);
