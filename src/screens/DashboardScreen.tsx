@@ -1,3 +1,8 @@
+/**
+ * Professional Dashboard Screen
+ * Displays real-time restaurant operations overview with clean, modern UI
+ */
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
@@ -6,13 +11,16 @@ import {
   ScrollView,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { StatsCard, OrdersGrid } from '../components/dashboard';
+import { StatCard } from '../components/StatCard';
+import { Icon } from '../components/Icon';
+import { OrdersGrid } from '../components/dashboard';
 import { dashboardApi } from '../api/dashboard';
 import { DashboardStats, Order, OrderStatus } from '../types';
 import { formatCurrency } from '../utils/format';
+import { theme } from '../theme';
 
 export default function DashboardScreen() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -76,12 +84,10 @@ export default function DashboardScreen() {
         )
       );
 
-      // Note: API call should be added here when orders API is implemented
       console.log('[Dashboard] Updating order status:', orderId, newStatus);
     } catch (err) {
       console.error('[Dashboard] Error updating order status:', err);
       Alert.alert('Error', 'Failed to update order status');
-      // Refresh data to revert optimistic update
       fetchDashboardData(false);
     }
   };
@@ -90,7 +96,8 @@ export default function DashboardScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading dashboard...</Text>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading dashboard</Text>
         </View>
       </SafeAreaView>
     );
@@ -100,7 +107,7 @@ export default function DashboardScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
+          <Icon name="circle-exclamation" size="2xl" color={theme.colors.error} />
           <Text style={styles.errorText}>{error}</Text>
           <Text style={styles.retryText}>Pull down to refresh</Text>
         </View>
@@ -117,47 +124,69 @@ export default function DashboardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#3b82f6']}
-            tintColor="#3b82f6"
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
           />
         }
       >
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Dashboard</Text>
           <Text style={styles.subtitle}>Real-time overview of your restaurant operations</Text>
         </View>
 
+        {/* Stats Cards */}
         {stats && (
           <View style={styles.statsSection}>
-            <StatsCard
-              title="Today's Orders"
-              value={stats.todayOrders ?? 0}
-              icon={<Ionicons name="bag-handle" size={28} color="#3b82f6" />}
-              color="#3b82f6"
-            />
-            <StatsCard
-              title="Today's Revenue"
-              value={formatCurrency(stats.todayRevenue ?? 0)}
-              icon={<Ionicons name="cash" size={28} color="#10b981" />}
-              color="#10b981"
-            />
-            <StatsCard
-              title="Active Orders"
-              value={stats.activeOrders ?? 0}
-              icon={<Ionicons name="cube" size={28} color="#f59e0b" />}
-              color="#f59e0b"
-            />
-            <StatsCard
-              title="Avg Prep Time"
-              value={`${stats.averagePreparationTime ?? 0}m`}
-              icon={<Ionicons name="time" size={28} color="#8b5cf6" />}
-              color="#8b5cf6"
-            />
+            <View style={styles.statsRow}>
+              <StatCard
+                title="Today's Orders"
+                value={stats.todayOrders ?? 0}
+                icon="receipt"
+                iconColor={theme.colors.primary}
+                iconBgColor={theme.colors.primaryBg}
+                trend={stats.ordersGrowth ? { value: stats.ordersGrowth, isPositive: stats.ordersGrowth > 0 } : undefined}
+                style={styles.statCard}
+              />
+              <StatCard
+                title="Today's Revenue"
+                value={formatCurrency(stats.todayRevenue ?? 0)}
+                icon="wallet"
+                iconColor={theme.colors.success}
+                iconBgColor={theme.colors.successLight}
+                trend={stats.revenueGrowth ? { value: stats.revenueGrowth, isPositive: stats.revenueGrowth > 0 } : undefined}
+                style={styles.statCard}
+              />
+            </View>
+            <View style={styles.statsRow}>
+              <StatCard
+                title="Active Orders"
+                value={stats.activeOrders ?? 0}
+                icon="fire"
+                iconColor={theme.colors.warning}
+                iconBgColor={theme.colors.warningLight}
+                subtitle="Currently processing"
+                style={styles.statCard}
+              />
+              <StatCard
+                title="Avg Prep Time"
+                value={`${stats.averagePreparationTime ?? 0}m`}
+                icon="clock"
+                iconColor="#8B5CF6"
+                iconBgColor="#EDE9FE"
+                subtitle="Per order"
+                style={styles.statCard}
+              />
+            </View>
           </View>
         )}
 
+        {/* Active Orders Section */}
         <View style={styles.ordersSection}>
-          <Text style={styles.sectionTitle}>Active Orders</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Active Orders</Text>
+            <Icon name="bell" size="sm" color={theme.colors.textTertiary} />
+          </View>
           <OrdersGrid
             orders={activeOrders}
             loading={false}
@@ -172,66 +201,79 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: theme.spacing.md,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: theme.spacing.md,
   },
   loadingText: {
-    marginTop: 16,
-    color: '#6b7280',
-    fontSize: 16,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: theme.spacing.xl,
+    gap: theme.spacing.md,
   },
   errorText: {
-    color: '#ef4444',
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
+    color: theme.colors.error,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
     textAlign: 'center',
   },
   retryText: {
-    color: '#6b7280',
-    fontSize: 14,
-    marginTop: 8,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
     textAlign: 'center',
   },
   header: {
-    marginBottom: 24,
+    marginBottom: theme.spacing.xl,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
   },
   statsSection: {
-    marginBottom: 32,
+    marginBottom: theme.spacing.xl,
+    gap: theme.spacing.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  statCard: {
+    flex: 1,
   },
   ordersSection: {
     flex: 1,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 16,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text,
   },
 });

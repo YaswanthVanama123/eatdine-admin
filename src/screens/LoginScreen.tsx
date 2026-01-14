@@ -1,9 +1,13 @@
+/**
+ * Professional Login Screen
+ * Secure authentication for admin dashboard access
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,6 +18,10 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { SecureStorage } from '../utils/storage';
 import { STORAGE_KEYS } from '../utils/constants';
+import { Icon } from '../components/Icon';
+import { Button } from '../components/Button';
+import { Card } from '../components/Card';
+import { theme } from '../theme';
 
 interface LoginScreenProps {
   navigation: any;
@@ -34,8 +42,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Load restaurant ID from storage if available
   useEffect(() => {
     const loadRestaurantId = async () => {
       try {
@@ -88,12 +96,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      // Store restaurant ID for API requests
       await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_ID, formData.restaurantId);
-
-      // Use the auth context's login function
       await login(formData.username, formData.password);
-
       Alert.alert('Success', 'Login successful! Welcome back.');
       navigation.replace('Dashboard');
     } catch (error: any) {
@@ -108,8 +112,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   if (isInitializing) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={styles.loadingText}>Initializing...</Text>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Initializing</Text>
       </View>
     );
   }
@@ -126,22 +130,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Text style={styles.iconText}>🔒</Text>
+            <Icon name="utensils" size="2xl" color={theme.colors.surface} solid />
           </View>
-          <Text style={styles.title}>Admin Login</Text>
-          <Text style={styles.subtitle}>Sign in to access your restaurant dashboard</Text>
+          <Text style={styles.title}>Admin Dashboard</Text>
+          <Text style={styles.subtitle}>Sign in to access your restaurant management</Text>
         </View>
 
         {/* Login Card */}
-        <View style={styles.card}>
+        <Card variant="elevated" style={styles.card}>
           {/* Restaurant ID Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Restaurant ID</Text>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🏪</Text>
+            <View style={[styles.inputWrapper, errors.restaurantId && styles.inputWrapperError]}>
+              <Icon name="shop" size="sm" color={theme.colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your restaurant ID"
+                placeholderTextColor={theme.colors.textTertiary}
                 value={formData.restaurantId}
                 onChangeText={(text) => {
                   setFormData({ ...formData, restaurantId: text });
@@ -162,11 +167,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           {/* Username Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Username</Text>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>👤</Text>
+            <View style={[styles.inputWrapper, errors.username && styles.inputWrapperError]}>
+              <Icon name="user" size="sm" color={theme.colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your username"
+                placeholderTextColor={theme.colors.textTertiary}
                 value={formData.username}
                 onChangeText={(text) => {
                   setFormData({ ...formData, username: text });
@@ -188,11 +194,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           {/* Password Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🔑</Text>
+            <View style={[styles.inputWrapper, errors.password && styles.inputWrapperError]}>
+              <Icon name="lock" size="sm" color={theme.colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
+                placeholderTextColor={theme.colors.textTertiary}
                 value={formData.password}
                 onChangeText={(text) => {
                   setFormData({ ...formData, password: text });
@@ -201,10 +208,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                   }
                 }}
                 editable={!isLoading}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="password"
+              />
+              <Icon
+                name={showPassword ? 'eye-slash' : 'eye'}
+                size="sm"
+                color={theme.colors.textTertiary}
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
               />
             </View>
             {errors.password ? (
@@ -213,22 +227,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </View>
 
           {/* Login Button */}
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+          <Button
+            title="Sign In"
             onPress={handleSubmit}
             disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            loading={isLoading}
+            size="lg"
+            fullWidth
+            style={styles.button}
+          />
+        </Card>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Protected area - Authorized personnel only</Text>
+          <View style={styles.footerIconContainer}>
+            <Icon name="lock" size="xs" color={theme.colors.textTertiary} solid />
+          </View>
+          <Text style={styles.footerText}>Secure Login - Authorized Personnel Only</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -238,127 +253,108 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: theme.colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: theme.spacing.lg,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: theme.colors.background,
+    gap: theme.spacing.md,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: theme.spacing.xl,
   },
   iconContainer: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: '#6366f1',
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  iconText: {
-    fontSize: 40,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#6366f1',
-    marginBottom: 8,
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: theme.spacing.xl,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: theme.spacing.lg,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#d1d5db',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+  },
+  inputWrapperError: {
+    borderColor: theme.colors.error,
   },
   inputIcon: {
-    fontSize: 20,
-    marginRight: 8,
+    marginRight: theme.spacing.sm,
+  },
+  eyeIcon: {
+    marginLeft: theme.spacing.sm,
   },
   input: {
     flex: 1,
     height: 48,
-    fontSize: 16,
-    color: '#111827',
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text,
   },
   errorText: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#ef4444',
+    marginTop: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.error,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   button: {
-    backgroundColor: '#6366f1',
-    borderRadius: 12,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
+    marginTop: theme.spacing.sm,
   },
   footer: {
-    marginTop: 24,
+    marginTop: theme.spacing.xl,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+  },
+  footerIconContainer: {
+    opacity: 0.6,
   },
   footerText: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
 });

@@ -31,7 +31,7 @@ function AppContent() {
     // Initialize notification handler with settings
     const initializeNotifications = async () => {
       try {
-        console.log('🚀 Initializing notification system...');
+        console.log('[App] Initializing notification system...');
 
         // Initialize sound and vibration first
         await soundVibrationService.initialize();
@@ -43,9 +43,9 @@ function AppContent() {
           vibrationEnabled: true, // Can be added to settings
         });
 
-        console.log('✅ Notification system initialized');
+        console.log('[App] Notification system initialized');
       } catch (error) {
-        console.error('❌ Notification initialization failed:', error);
+        console.error('[App] Notification initialization failed:', error);
       }
     };
 

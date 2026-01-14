@@ -11,7 +11,7 @@ class FCMTokenService {
       const authToken = await SecureStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
 
       if (!authToken) {
-        console.warn('⚠️ No auth token found, skipping FCM token registration');
+        console.warn('[FCM] No auth token found, skipping FCM token registration');
         return;
       }
 
@@ -25,9 +25,9 @@ class FCMTokenService {
         }
       );
 
-      console.log('✅ FCM token registered with backend');
+      console.log('[FCM] Token registered with backend');
     } catch (error) {
-      console.error('❌ Failed to register FCM token:', error);
+      console.error('[FCM] Failed to register FCM token:', error);
       // Don't throw - this is not critical for app functionality
     }
   }
@@ -50,9 +50,9 @@ class FCMTokenService {
         data: { fcmToken },
       });
 
-      console.log('✅ FCM token unregistered from backend');
+      console.log('[FCM] Token unregistered from backend');
     } catch (error) {
-      console.error('❌ Failed to unregister FCM token:', error);
+      console.error('[FCM] Failed to unregister FCM token:', error);
       // Don't throw - this is not critical
     }
   }
