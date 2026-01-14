@@ -2,6 +2,8 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+// Support monorepo: Try local node_modules first, then root node_modules
+def nodeModulesPath = file("../../node_modules").exists() ? "../../node_modules" : "../../../node_modules"
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 /**
@@ -163,14 +165,14 @@ dependencies {
     }
 }
 
-def cliNativeModulesGradle = file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+def cliNativeModulesGradle = file("${nodeModulesPath}/@react-native-community/cli-platform-android/native_modules.gradle")
 if (!cliNativeModulesGradle.exists()) {
-    cliNativeModulesGradle = file("../../node_modules/react-native/node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+    cliNativeModulesGradle = file("${nodeModulesPath}/react-native/node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
 }
 apply from: cliNativeModulesGradle
 applyNativeModulesAppBuildGradle(project)
 
 // Apply vector icons fonts
-apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
+apply from: file("${nodeModulesPath}/react-native-vector-icons/fonts.gradle")
 
 apply plugin: 'com.google.gms.google-services'
