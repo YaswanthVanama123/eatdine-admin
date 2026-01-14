@@ -1,12 +1,5 @@
 rootProject.name = 'AdminMobileAppRN'
-
-// Support monorepo: Try local node_modules first, then root node_modules
-def nodeModulesPath = file("../node_modules").exists() ? "../node_modules" : "../../node_modules"
-def cliNativeModulesGradle = file("${nodeModulesPath}/@react-native-community/cli-platform-android/native_modules.gradle")
-if (!cliNativeModulesGradle.exists()) {
-    cliNativeModulesGradle = file("${nodeModulesPath}/react-native/node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
-}
-apply from: cliNativeModulesGradle
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
 applyNativeModulesSettingsGradle(settings)
 include ':app'
-includeBuild("${nodeModulesPath}/@react-native/gradle-plugin")
+includeBuild('../node_modules/@react-native/gradle-plugin')
