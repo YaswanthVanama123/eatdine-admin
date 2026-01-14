@@ -1,8 +1,11 @@
 import { OrderStatus } from '../types';
+import Config from 'react-native-config';
 
 // API Configuration
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
-export const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+// Use your computer's IP address for development
+// Example: http://192.168.1.100:5000
+export const API_BASE_URL = Config.API_BASE_URL || 'http://192.168.1.100:5000';
+export const SOCKET_URL = Config.SOCKET_URL || 'http://192.168.1.100:5000';
 
 // Order Status Configuration
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, {
