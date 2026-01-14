@@ -127,7 +127,12 @@ export default function TablesScreen() {
 
   const handleToggleStatus = async (table: Table) => {
     try {
-      await tablesApi.updateStatus(table._id, table.isAvailable ? 'occupied' : 'available');
+      if (table.isAvailable) {
+        // Just toggle status - in real app would need orderId
+        await tablesApi.toggleStatus(table._id);
+      } else {
+        await tablesApi.markAvailable(table._id);
+      }
       fetchTables();
     } catch (error) {
       Alert.alert('Error', 'Failed to update table status');
