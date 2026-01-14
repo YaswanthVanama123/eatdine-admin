@@ -17,4 +17,4 @@ messaging().setBackgroundMessageHandler(async (remoteMessage) => {
 });
 
 // Register the main application component
-AppRegistry.registerComponent('AdminMobileApp', () => App);
+AppRegistry.registerComponent('AdminMobileAppRN', () => App);
