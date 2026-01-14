@@ -16,6 +16,11 @@ export type TabParamList = {
   Dashboard: undefined;
   Orders: undefined;
   Kitchen: undefined;
+  Menu: undefined;
+  Categories: undefined;
+  AddOns: undefined;
+  Tables: undefined;
+  Analytics: undefined;
   Settings: undefined;
 };
 

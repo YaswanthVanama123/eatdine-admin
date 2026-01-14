@@ -5,6 +5,11 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import DashboardScreen from '../screens/DashboardScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import KitchenScreen from '../screens/KitchenScreen';
+import MenuScreen from '../screens/MenuScreen';
+import CategoriesScreen from '../screens/CategoriesScreen';
+import AddOnsScreen from '../screens/AddOnsScreen';
+import TablesScreen from '../screens/TablesScreen';
+import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import { TabParamList } from './types';
 import { theme } from '../theme';
@@ -27,6 +32,21 @@ export default function TabNavigator() {
               break;
             case 'Kitchen':
               iconName = 'fire';
+              break;
+            case 'Menu':
+              iconName = 'utensils';
+              break;
+            case 'Categories':
+              iconName = 'list';
+              break;
+            case 'AddOns':
+              iconName = 'pizza-slice';
+              break;
+            case 'Tables':
+              iconName = 'chair';
+              break;
+            case 'Analytics':
+              iconName = 'chart-column';
               break;
             case 'Settings':
               iconName = 'gear';
@@ -94,6 +114,31 @@ export default function TabNavigator() {
         name="Kitchen"
         component={KitchenScreen}
         options={{ tabBarLabel: 'Kitchen' }}
+      />
+      <Tab.Screen
+        name="Menu"
+        component={MenuScreen}
+        options={{ tabBarLabel: 'Menu' }}
+      />
+      <Tab.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{ tabBarLabel: 'Categories' }}
+      />
+      <Tab.Screen
+        name="AddOns"
+        component={AddOnsScreen}
+        options={{ tabBarLabel: 'Add-Ons' }}
+      />
+      <Tab.Screen
+        name="Tables"
+        component={TablesScreen}
+        options={{ tabBarLabel: 'Tables' }}
+      />
+      <Tab.Screen
+        name="Analytics"
+        component={AnalyticsScreen}
+        options={{ tabBarLabel: 'Analytics' }}
       />
       <Tab.Screen
         name="Settings"
