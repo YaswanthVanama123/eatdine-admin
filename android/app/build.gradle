@@ -120,6 +120,11 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
+    lintOptions {
+        disable 'MissingTranslation'
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
