@@ -16,8 +16,7 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { SecureStorage } from '../utils/storage';
-import { STORAGE_KEYS } from '../utils/constants';
+import { storage } from '../api/storage';  // Use unified storage
 import { Icon } from '../components/Icon';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -48,7 +47,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   useEffect(() => {
     const loadSubdomain = async () => {
       try {
-        const storedSubdomain = await SecureStorage.getItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN);
+        const storedSubdomain = await storage.getSubdomain();
         if (storedSubdomain) {
           setFormData((prev) => ({ ...prev, subdomain: storedSubdomain }));
         }
@@ -100,14 +99,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      // Save subdomain for next time
-      await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN, formData.subdomain.trim().toLowerCase());
-
       // Login with subdomain, username, and password
+      // The login function will save subdomain, token, restaurant ID, and admin data
       await login(formData.subdomain.trim().toLowerCase(), formData.username, formData.password);
 
       Alert.alert('Success', 'Welcome back!');
-      navigation.replace('Dashboard');
+      navigation.replace('Main');  // Navigate to Main (TabNavigator), not Dashboard
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
       Alert.alert('Login Failed', errorMessage);

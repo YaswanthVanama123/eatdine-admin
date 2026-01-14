@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi } from '../api/auth';
-import { SecureStorage } from '../utils/storage';
-import { STORAGE_KEYS } from '../utils/constants';
+import { storage } from '../api/storage';  // Use API storage instead
 import { Admin } from '../types';
 
 interface User {
@@ -35,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
 
       // Check if we have a token
-      const token = await SecureStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
+      const token = await storage.getToken();
 
       if (!token) {
         setIsLoading(false);
@@ -43,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Check if we have stored admin data
-      const storedAdminData = await SecureStorage.getObject<Admin>(STORAGE_KEYS.ADMIN_DATA);
+      const storedAdminData = await storage.getAdminData();
 
       if (storedAdminData) {
         // Convert Admin to User format
@@ -68,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
 
           // Update stored admin data
-          await SecureStorage.setObject(STORAGE_KEYS.ADMIN_DATA, admin);
+          await storage.setAdminData(admin);
         } else {
           // Token is invalid, clear auth
           await clearAuthData();
@@ -89,10 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearAuthData = async () => {
     setUser(null);
-    await SecureStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN);
-    await SecureStorage.removeItem(STORAGE_KEYS.ADMIN_DATA);
-    await SecureStorage.removeItem(STORAGE_KEYS.RESTAURANT_ID);
-    await SecureStorage.removeItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN);
+    await storage.clearAuth();  // Uses the unified storage system
   };
 
   const login = async (subdomain: string, username: string, password: string) => {
@@ -101,19 +97,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { token, admin } = await authApi.login({ subdomain, username, password });
 
       // Store the token
-      await SecureStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, token);
+      await storage.setToken(token);
 
       // Store subdomain
-      await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN, subdomain);
+      await storage.setSubdomain(subdomain);
 
       // Store restaurant ID from admin object
       if (admin.restaurantId) {
         const restaurantId = typeof admin.restaurantId === 'string' ? admin.restaurantId : admin.restaurantId._id;
-        await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_ID, restaurantId);
+        await storage.setRestaurantId(restaurantId);
       }
 
       // Store admin data
-      await SecureStorage.setObject(STORAGE_KEYS.ADMIN_DATA, admin);
+      await storage.setAdminData(admin);
 
       // Update user state
       setUser({
