@@ -16,6 +16,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Icon } from '../components/Icon';
 import { dashboardApi } from '../api/dashboard';
 import { DashboardStats, Order } from '../types';
@@ -24,6 +25,7 @@ import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
@@ -117,7 +119,10 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.notificationButton}>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate('Notifications' as never)}
+            >
               <Icon name="bell" size="lg" color={theme.colors.primary} solid />
               {activeOrders.length > 0 && (
                 <View style={styles.notificationBadge}>

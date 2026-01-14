@@ -5,6 +5,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<TabParamList>;
+  Notifications: undefined;
 };
 
 export type AuthStackParamList = {

@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
+import NotificationsScreen from '../screens/NotificationsScreen';
 import linking from './linking';
 import { RootStackParamList } from './types';
 
@@ -18,7 +19,17 @@ export default function RootNavigator() {
         {!isAuthenticated ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
         ) : (
-          <Stack.Screen name="Main" component={TabNavigator} />
+          <>
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{
+                presentation: 'card',
+                animation: 'slide_from_right',
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
