@@ -51,6 +51,7 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 export const STORAGE_KEYS = {
   ADMIN_TOKEN: '@adminToken',
   RESTAURANT_ID: '@restaurantId',
+  RESTAURANT_SUBDOMAIN: '@restaurantSubdomain',
   ADMIN_DATA: '@adminData',
   FCM_TOKEN: '@fcmToken',
   PRINT_SERVICE_URL: '@printServiceUrl',

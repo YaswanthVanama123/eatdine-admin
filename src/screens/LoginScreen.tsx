@@ -1,9 +1,9 @@
 /**
  * Professional Admin Login Screen
- * Secure authentication for admin dashboard access
+ * Secure authentication for restaurant admin dashboard access
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { SecureStorage } from '../utils/storage';
+import { STORAGE_KEYS } from '../utils/constants';
 import { Icon } from '../components/Icon';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -29,22 +31,52 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({
+    subdomain: '',
     username: '',
     password: '',
   });
   const [errors, setErrors] = useState({
+    subdomain: '',
     username: '',
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Load previously used subdomain if available
+  useEffect(() => {
+    const loadSubdomain = async () => {
+      try {
+        const storedSubdomain = await SecureStorage.getItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN);
+        if (storedSubdomain) {
+          setFormData((prev) => ({ ...prev, subdomain: storedSubdomain }));
+        }
+      } catch (error) {
+        console.error('Error loading subdomain:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    loadSubdomain();
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors = {
+      subdomain: '',
       username: '',
       password: '',
     };
     let isValid = true;
+
+    if (!formData.subdomain.trim()) {
+      newErrors.subdomain = 'Restaurant subdomain is required';
+      isValid = false;
+    } else if (!/^[a-z0-9-]+$/.test(formData.subdomain.trim())) {
+      newErrors.subdomain = 'Only lowercase letters, numbers, and hyphens allowed';
+      isValid = false;
+    }
 
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
@@ -68,7 +100,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password);
+      // Save subdomain for next time
+      await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN, formData.subdomain.trim().toLowerCase());
+
+      // Login with subdomain, username, and password
+      await login(formData.subdomain.trim().toLowerCase(), formData.username, formData.password);
+
       Alert.alert('Success', 'Welcome back!');
       navigation.replace('Dashboard');
     } catch (error: any) {
@@ -79,6 +116,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+
+  if (isInitializing) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Initializing</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -100,6 +146,35 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
         {/* Login Card */}
         <Card variant="elevated" style={styles.card}>
+          {/* Restaurant Subdomain Input */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Restaurant Subdomain</Text>
+            <View style={[styles.inputWrapper, errors.subdomain && styles.inputWrapperError]}>
+              <Icon name="shop" size="sm" color={theme.colors.textTertiary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="your-restaurant"
+                placeholderTextColor={theme.colors.textTertiary}
+                value={formData.subdomain}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, subdomain: text.toLowerCase() });
+                  if (errors.subdomain) {
+                    setErrors({ ...errors, subdomain: '' });
+                  }
+                }}
+                editable={!isLoading}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+              />
+            </View>
+            {errors.subdomain ? (
+              <Text style={styles.errorText}>{errors.subdomain}</Text>
+            ) : (
+              <Text style={styles.helperText}>e.g., pizzaplace, cafedelight</Text>
+            )}
+          </View>
+
           {/* Username Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Username</Text>
@@ -196,6 +271,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: theme.spacing.lg,
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    gap: theme.spacing.md,
+  },
+  loadingText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
@@ -262,6 +349,11 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.error,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  helperText: {
+    marginTop: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textTertiary,
   },
   button: {
     marginTop: theme.spacing.sm,

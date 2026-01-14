@@ -15,7 +15,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (subdomain: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -91,15 +91,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     await SecureStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN);
     await SecureStorage.removeItem(STORAGE_KEYS.ADMIN_DATA);
+    await SecureStorage.removeItem(STORAGE_KEYS.RESTAURANT_ID);
+    await SecureStorage.removeItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN);
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (subdomain: string, username: string, password: string) => {
     try {
-      // Call the auth API
-      const { token, admin } = await authApi.login({ username, password });
+      // Call the auth API with subdomain
+      const { token, admin } = await authApi.login({ subdomain, username, password });
 
       // Store the token
       await SecureStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, token);
+
+      // Store subdomain
+      await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN, subdomain);
+
+      // Store restaurant ID from admin object
+      if (admin.restaurantId) {
+        const restaurantId = typeof admin.restaurantId === 'string' ? admin.restaurantId : admin.restaurantId._id;
+        await SecureStorage.setItem(STORAGE_KEYS.RESTAURANT_ID, restaurantId);
+      }
 
       // Store admin data
       await SecureStorage.setObject(STORAGE_KEYS.ADMIN_DATA, admin);

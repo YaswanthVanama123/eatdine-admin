@@ -13,6 +13,7 @@ export interface Admin {
 
 // Form Types
 export interface LoginFormData {
+  subdomain: string;
   username: string;
   password: string;
 }
@@ -22,7 +23,7 @@ export interface AuthContextType {
   admin: Admin | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (subdomain: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAdmin: () => Promise<void>;
 }
