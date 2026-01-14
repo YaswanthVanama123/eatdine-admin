@@ -1,113 +1,124 @@
 /**
- * Professional Admin Dashboard Theme
- * Clean, modern design for business applications
+ * Modern Professional Theme - Restaurant Admin
+ * Clean, vibrant design for mobile admin experience
  */
 
 export const theme = {
   colors: {
-    // Primary Brand Colors
-    primary: '#2563EB', // Blue 600
-    primaryLight: '#3B82F6', // Blue 500
-    primaryDark: '#1E40AF', // Blue 700
-    primaryBg: '#EFF6FF', // Blue 50
+    // Primary Brand Colors - Vibrant Indigo/Purple Gradient
+    primary: '#6366F1',        // Indigo 500
+    primaryDark: '#4F46E5',    // Indigo 600
+    primaryLight: '#818CF8',   // Indigo 400
+    primaryLighter: '#C7D2FE', // Indigo 200
+    primaryBg: '#EEF2FF',      // Indigo 50
+
+    // Accent Colors
+    accent: '#F59E0B',         // Amber 500
+    accentLight: '#FCD34D',    // Amber 300
+    accentBg: '#FEF3C7',       // Amber 100
 
     // Semantic Colors
-    success: '#10B981', // Green 500
-    successLight: '#D1FAE5', // Green 100
-    successDark: '#047857', // Green 700
+    success: '#10B981',        // Emerald 500
+    successLight: '#D1FAE5',   // Emerald 100
+    successDark: '#059669',    // Emerald 600
 
-    warning: '#F59E0B', // Amber 500
-    warningLight: '#FEF3C7', // Amber 100
-    warningDark: '#D97706', // Amber 600
+    warning: '#F59E0B',        // Amber 500
+    warningLight: '#FEF3C7',   // Amber 100
+    warningDark: '#D97706',    // Amber 600
 
-    error: '#EF4444', // Red 500
-    errorLight: '#FEE2E2', // Red 100
-    errorDark: '#DC2626', // Red 600
+    error: '#EF4444',          // Red 500
+    errorLight: '#FEE2E2',     // Red 100
+    errorDark: '#DC2626',      // Red 600
 
-    info: '#0EA5E9', // Sky 500
-    infoLight: '#E0F2FE', // Sky 100
-    infoDark: '#0284C7', // Sky 600
+    info: '#3B82F6',           // Blue 500
+    infoLight: '#DBEAFE',      // Blue 100
+    infoDark: '#2563EB',       // Blue 600
 
-    // Neutral Colors
-    background: '#F8FAFC', // Slate 50
-    surface: '#FFFFFF', // White
-    surfaceVariant: '#F1F5F9', // Slate 100
+    // Neutral Colors - Modern Gray Scale
+    background: '#F9FAFB',     // Gray 50
+    surface: '#FFFFFF',        // White
+    surfaceHover: '#F3F4F6',   // Gray 100
+    surfaceVariant: '#F3F4F6', // Gray 100
 
-    text: '#0F172A', // Slate 900
-    textSecondary: '#475569', // Slate 600
-    textTertiary: '#94A3B8', // Slate 400
-    textDisabled: '#CBD5E1', // Slate 300
+    text: '#111827',           // Gray 900
+    textSecondary: '#6B7280',  // Gray 500
+    textTertiary: '#9CA3AF',   // Gray 400
+    textDisabled: '#D1D5DB',   // Gray 300
+    textInverse: '#FFFFFF',
 
-    border: '#E2E8F0', // Slate 200
-    borderLight: '#F1F5F9', // Slate 100
-    borderDark: '#CBD5E1', // Slate 300
+    border: '#E5E7EB',         // Gray 200
+    borderLight: '#F3F4F6',    // Gray 100
+    borderDark: '#D1D5DB',     // Gray 300
 
-    shadow: '#0F172A1A', // Slate 900 with 10% opacity
-    overlay: '#0F172A80', // Slate 900 with 50% opacity
+    // Order Status Colors
+    received: '#3B82F6',       // Blue
+    preparing: '#F59E0B',      // Amber
+    ready: '#10B981',          // Emerald
+    served: '#6B7280',         // Gray
+    cancelled: '#EF4444',      // Red
 
-    // Status Colors (for orders, etc.)
-    pending: '#F59E0B', // Amber 500
-    confirmed: '#3B82F6', // Blue 500
-    preparing: '#8B5CF6', // Violet 500
-    ready: '#10B981', // Green 500
-    completed: '#6B7280', // Gray 500
-    cancelled: '#EF4444', // Red 500
+    // Gradient Colors
+    gradientStart: '#6366F1',  // Indigo
+    gradientMid: '#8B5CF6',    // Purple
+    gradientEnd: '#A855F7',    // Purple 500
+
+    // Overlay & Shadow
+    overlay: 'rgba(0, 0, 0, 0.5)',
+    overlayLight: 'rgba(0, 0, 0, 0.3)',
+    shadow: '#0F172A1A',
 
     // Chart Colors
-    chart1: '#3B82F6', // Blue
-    chart2: '#10B981', // Green
+    chart1: '#6366F1', // Indigo
+    chart2: '#10B981', // Emerald
     chart3: '#F59E0B', // Amber
-    chart4: '#8B5CF6', // Violet
+    chart4: '#8B5CF6', // Purple
     chart5: '#EC4899', // Pink
     chart6: '#06B6D4', // Cyan
   },
 
   typography: {
-    // Font Families
     fontFamily: {
       regular: 'System',
       medium: 'System',
       semibold: 'System',
       bold: 'System',
     },
-
-    // Font Sizes
     fontSize: {
-      xs: 12,
-      sm: 14,
-      base: 16,
-      lg: 18,
-      xl: 20,
-      '2xl': 24,
-      '3xl': 30,
-      '4xl': 36,
+      xs: 11,
+      sm: 13,
+      base: 15,
+      lg: 17,
+      xl: 19,
+      '2xl': 22,
+      '3xl': 28,
+      '4xl': 34,
+      '5xl': 42,
     },
-
-    // Line Heights
     lineHeight: {
       tight: 1.2,
       normal: 1.5,
       relaxed: 1.75,
     },
-
-    // Font Weights
     fontWeight: {
       regular: '400' as const,
       medium: '500' as const,
       semibold: '600' as const,
       bold: '700' as const,
+      extrabold: '800' as const,
     },
   },
 
   spacing: {
     xs: 4,
     sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    '2xl': 40,
-    '3xl': 48,
-    '4xl': 64,
+    md: 12,
+    base: 16,
+    lg: 20,
+    xl: 24,
+    '2xl': 32,
+    '3xl': 40,
+    '4xl': 48,
+    '5xl': 64,
   },
 
   borderRadius: {
@@ -116,7 +127,8 @@ export const theme = {
     md: 8,
     lg: 12,
     xl: 16,
-    '2xl': 24,
+    '2xl': 20,
+    '3xl': 24,
     full: 9999,
   },
 
@@ -129,36 +141,42 @@ export const theme = {
       elevation: 0,
     },
     sm: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 1,
+      elevation: 2,
     },
     md: {
-      shadowColor: '#0F172A',
-      shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 3,
+      shadowRadius: 4,
+      elevation: 4,
     },
     lg: {
-      shadowColor: '#0F172A',
-      shadowOffset: { width: 0, height: 10 },
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.1,
-      shadowRadius: 15,
-      elevation: 5,
+      shadowRadius: 8,
+      elevation: 8,
     },
     xl: {
-      shadowColor: '#0F172A',
-      shadowOffset: { width: 0, height: 20 },
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.12,
-      shadowRadius: 25,
-      elevation: 8,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    '2xl': {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
+      elevation: 16,
     },
   },
 
-  // Icon Sizes
   iconSizes: {
     xs: 16,
     sm: 20,
@@ -166,6 +184,13 @@ export const theme = {
     lg: 28,
     xl: 32,
     '2xl': 40,
+    '3xl': 48,
+  },
+
+  animation: {
+    fast: 150,
+    normal: 250,
+    slow: 350,
   },
 } as const;
 

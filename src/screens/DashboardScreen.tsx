@@ -1,6 +1,6 @@
 /**
- * Professional Dashboard Screen
- * Displays real-time restaurant operations overview with clean, modern UI
+ * Modern Dashboard Screen
+ * Beautiful real-time restaurant operations overview
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,13 +12,13 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatCard } from '../components/StatCard';
 import { Icon } from '../components/Icon';
-import { OrdersGrid } from '../components/dashboard';
 import { dashboardApi } from '../api/dashboard';
-import { DashboardStats, Order, OrderStatus } from '../types';
+import { DashboardStats, Order } from '../types';
 import { formatCurrency } from '../utils/format';
 import { theme } from '../theme';
 
@@ -27,37 +27,34 @@ export default function DashboardScreen() {
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const hasFetchedData = useRef(false);
   const isFetching = useRef(false);
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const fetchDashboardData = useCallback(async (showLoading = true) => {
     if (isFetching.current) return;
 
     try {
       isFetching.current = true;
-      if (showLoading) {
-        setLoading(true);
-      }
-      setError(null);
-
-      console.log('[Dashboard] Fetching dashboard data...');
+      if (showLoading) setLoading(true);
 
       const { stats: statsData, activeOrders: ordersData } = await dashboardApi.getPageData();
-
       setStats(statsData);
       setActiveOrders(ordersData);
-
-      console.log('[Dashboard] Data fetched successfully');
     } catch (err) {
-      console.error('[Dashboard] Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data');
-      Alert.alert('Error', 'Failed to load dashboard data. Please try again.');
+      console.error('[Dashboard] Error:', err);
+      Alert.alert('Error', 'Failed to load dashboard data');
     } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
+      if (showLoading) setLoading(false);
       setRefreshing(false);
       isFetching.current = false;
     }
@@ -70,46 +67,16 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     if (hasFetchedData.current || isFetching.current) return;
-
     hasFetchedData.current = true;
     fetchDashboardData();
   }, [fetchDashboardData]);
-
-  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
-    try {
-      // Optimistic update
-      setActiveOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
-
-      console.log('[Dashboard] Updating order status:', orderId, newStatus);
-    } catch (err) {
-      console.error('[Dashboard] Error updating order status:', err);
-      Alert.alert('Error', 'Failed to update order status');
-      fetchDashboardData(false);
-    }
-  };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading dashboard</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error && !refreshing) {
-    return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.errorContainer}>
-          <Icon name="circle-exclamation" size="2xl" color={theme.colors.error} />
-          <Text style={styles.errorText}>{error}</Text>
-          <Text style={styles.retryText}>Pull down to refresh</Text>
+          <Text style={styles.loadingText}>Loading dashboard...</Text>
         </View>
       </SafeAreaView>
     );
@@ -128,73 +95,180 @@ export default function DashboardScreen() {
             tintColor={theme.colors.primary}
           />
         }
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Dashboard</Text>
-          <Text style={styles.subtitle}>Real-time overview of your restaurant operations</Text>
-        </View>
-
-        {/* Stats Cards */}
-        {stats && (
-          <View style={styles.statsSection}>
-            <View style={styles.statsRow}>
-              <StatCard
-                title="Today's Orders"
-                value={stats.todayOrders ?? 0}
-                icon="receipt"
-                iconColor={theme.colors.primary}
-                iconBgColor={theme.colors.primaryBg}
-                trend={stats.ordersGrowth ? { value: stats.ordersGrowth, isPositive: stats.ordersGrowth > 0 } : undefined}
-                style={styles.statCard}
-              />
-              <StatCard
-                title="Today's Revenue"
-                value={formatCurrency(stats.todayRevenue ?? 0)}
-                icon="wallet"
-                iconColor={theme.colors.success}
-                iconBgColor={theme.colors.successLight}
-                trend={stats.revenueGrowth ? { value: stats.revenueGrowth, isPositive: stats.revenueGrowth > 0 } : undefined}
-                style={styles.statCard}
-              />
+        <Animated.View style={{ opacity: fadeAnim }}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}</Text>
+              <Text style={styles.headerTitle}>Dashboard Overview</Text>
             </View>
-            <View style={styles.statsRow}>
-              <StatCard
-                title="Active Orders"
-                value={stats.activeOrders ?? 0}
+            <TouchableOpacity style={styles.notificationButton}>
+              <Icon name="bell" size="lg" color={theme.colors.text} />
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>{activeOrders.length}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            <StatCard
+              title="Today's Revenue"
+              value={formatCurrency(stats?.todayRevenue || 0)}
+              icon="dollar-sign"
+              iconColor={theme.colors.success}
+              bgColor={theme.colors.successLight}
+            />
+            <StatCard
+              title="Orders Today"
+              value={stats?.todayOrders?.toString() || '0'}
+              icon="receipt"
+              iconColor={theme.colors.primary}
+              bgColor={theme.colors.primaryBg}
+            />
+            <StatCard
+              title="Active Orders"
+              value={stats?.activeOrders?.toString() || '0'}
+              icon="clock"
+              iconColor={theme.colors.warning}
+              bgColor={theme.colors.warningLight}
+            />
+            <StatCard
+              title="Avg Prep Time"
+              value={`${stats?.averagePreparationTime || 0}m`}
+              icon="gauge-high"
+              iconColor={theme.colors.info}
+              bgColor={theme.colors.infoLight}
+            />
+          </View>
+
+          {/* Order Status Summary */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Order Status</Text>
+            <View style={styles.statusGrid}>
+              <StatusCard
+                label="Received"
+                count={stats?.ordersByStatus?.received || 0}
+                color={theme.colors.received}
+                icon="inbox"
+              />
+              <StatusCard
+                label="Preparing"
+                count={stats?.ordersByStatus?.preparing || 0}
+                color={theme.colors.preparing}
                 icon="fire"
-                iconColor={theme.colors.warning}
-                iconBgColor={theme.colors.warningLight}
-                subtitle="Currently processing"
-                style={styles.statCard}
               />
-              <StatCard
-                title="Avg Prep Time"
-                value={`${stats.averagePreparationTime ?? 0}m`}
-                icon="clock"
-                iconColor="#8B5CF6"
-                iconBgColor="#EDE9FE"
-                subtitle="Per order"
-                style={styles.statCard}
+              <StatusCard
+                label="Ready"
+                count={stats?.ordersByStatus?.ready || 0}
+                color={theme.colors.ready}
+                icon="check-circle"
+              />
+              <StatusCard
+                label="Served"
+                count={stats?.ordersByStatus?.served || 0}
+                color={theme.colors.served}
+                icon="circle-check"
               />
             </View>
           </View>
-        )}
 
-        {/* Active Orders Section */}
-        <View style={styles.ordersSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Active Orders</Text>
-            <Icon name="bell" size="sm" color={theme.colors.textTertiary} />
+          {/* Active Orders */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Active Orders</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+
+            {activeOrders.length > 0 ? (
+              <View style={styles.ordersContainer}>
+                {activeOrders.slice(0, 5).map((order) => (
+                  <OrderCard key={order._id} order={order} />
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Icon name="inbox" size="3xl" color={theme.colors.textTertiary} />
+                <Text style={styles.emptyStateText}>No active orders</Text>
+                <Text style={styles.emptyStateSubtext}>New orders will appear here</Text>
+              </View>
+            )}
           </View>
-          <OrdersGrid
-            orders={activeOrders}
-            loading={false}
-            onUpdateStatus={handleUpdateStatus}
-          />
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+// StatCard Component
+function StatCard({ title, value, icon, iconColor, bgColor }: any) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIconContainer, { backgroundColor: bgColor }]}>
+        <Icon name={icon} size="lg" color={iconColor} solid />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statTitle}>{title}</Text>
+    </View>
+  );
+}
+
+// StatusCard Component
+function StatusCard({ label, count, color, icon }: any) {
+  return (
+    <View style={styles.statusCard}>
+      <View style={[styles.statusIcon, { backgroundColor: color + '20' }]}>
+        <Icon name={icon} size="md" color={color} solid />
+      </View>
+      <Text style={styles.statusCount}>{count}</Text>
+      <Text style={styles.statusLabel}>{label}</Text>
+    </View>
+  );
+}
+
+// OrderCard Component
+function OrderCard({ order }: { order: Order }) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'received': return theme.colors.received;
+      case 'preparing': return theme.colors.preparing;
+      case 'ready': return theme.colors.ready;
+      default: return theme.colors.textTertiary;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'received': return 'inbox';
+      case 'preparing': return 'fire';
+      case 'ready': return 'check-circle';
+      default: return 'circle';
+    }
+  };
+
+  return (
+    <TouchableOpacity style={styles.orderCard} activeOpacity={0.7}>
+      <View style={styles.orderCardHeader}>
+        <View style={styles.orderInfo}>
+          <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
+          <Text style={styles.orderTable}>Table {order.tableNumber}</Text>
+        </View>
+        <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) + '20' }]}>
+          <Icon name={getStatusIcon(order.status)} size="xs" color={getStatusColor(order.status)} solid />
+          <Text style={[styles.orderStatusText, { color: getStatusColor(order.status) }]}>
+            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.orderCardFooter}>
+        <Text style={styles.orderItems}>{order.items.length} items</Text>
+        <Text style={styles.orderAmount}>{formatCurrency(order.total)}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -203,12 +277,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: theme.spacing.md,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -216,64 +284,216 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   loadingText: {
-    color: theme.colors.textSecondary,
     fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  errorContainer: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-    gap: theme.spacing.md,
   },
-  errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    textAlign: 'center',
-  },
-  retryText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
-    textAlign: 'center',
+  scrollContent: {
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing['3xl'],
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
-  title: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
+  greeting: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
     marginBottom: theme.spacing.xs,
   },
-  subtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textSecondary,
+  headerTitle: {
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.text,
   },
-  statsSection: {
-    marginBottom: theme.spacing.xl,
-    gap: theme.spacing.md,
+  notificationButton: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.md,
   },
-  statsRow: {
+  notificationBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.full,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textInverse,
+  },
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
   },
   statCard: {
     flex: 1,
+    minWidth: '47%',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    ...theme.shadows.md,
   },
-  ordersSection: {
-    flex: 1,
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  statValue: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  statTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  section: {
+    marginBottom: theme.spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize['2xl'],
+    fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text,
+  },
+  seeAllText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.primary,
+  },
+  statusGrid: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  statusCard: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.base,
+    alignItems: 'center',
+    ...theme.shadows.sm,
+  },
+  statusIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  statusCount: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  statusLabel: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+    textAlign: 'center',
+  },
+  ordersContainer: {
+    gap: theme.spacing.md,
+  },
+  orderCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    ...theme.shadows.sm,
+  },
+  orderCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  orderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  orderNumber: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text,
+  },
+  orderTable: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  orderStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 6,
+    borderRadius: theme.borderRadius.md,
+  },
+  orderStatusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  orderCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  orderItems: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  orderAmount: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary,
+  },
+  emptyState: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing['3xl'],
+    alignItems: 'center',
+    ...theme.shadows.sm,
+  },
+  emptyStateText: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text,
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.xs,
+  },
+  emptyStateSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
   },
 });
