@@ -13,6 +13,7 @@ export interface StorageAdapter {
 export const STORAGE_KEYS = {
   ADMIN_TOKEN: 'adminToken',
   RESTAURANT_ID: 'restaurantId',
+  RESTAURANT_SUBDOMAIN: 'restaurantSubdomain',  // Add subdomain key
   ADMIN_DATA: 'adminData',
 } as const;
 
@@ -110,11 +111,24 @@ class StorageManager {
     return this.removeItem(STORAGE_KEYS.ADMIN_DATA);
   }
 
+  async getSubdomain(): Promise<string | null> {
+    return this.getItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN);
+  }
+
+  async setSubdomain(subdomain: string): Promise<void> {
+    return this.setItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN, subdomain);
+  }
+
+  async removeSubdomain(): Promise<void> {
+    return this.removeItem(STORAGE_KEYS.RESTAURANT_SUBDOMAIN);
+  }
+
   async clearAuth(): Promise<void> {
     await Promise.all([
       this.removeToken(),
       this.removeRestaurantId(),
       this.removeAdminData(),
+      this.removeSubdomain(),
     ]);
   }
 }

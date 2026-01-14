@@ -55,12 +55,19 @@ class ApiClient {
           config.headers['x-restaurant-id'] = restaurantId;
         }
 
+        // Add subdomain header for mobile apps (backend tenant middleware reads this)
+        const subdomain = await storage.getSubdomain();
+        if (subdomain) {
+          config.headers['x-subdomain'] = subdomain;
+        }
+
         if (this.config?.debug) {
           console.log('[API Client] Request:', {
             method: config.method?.toUpperCase(),
             url: config.url,
             hasAuth: !!token,
             hasRestaurantId: !!restaurantId,
+            hasSubdomain: !!subdomain,
           });
         }
 
